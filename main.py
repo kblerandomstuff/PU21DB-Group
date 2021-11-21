@@ -95,19 +95,41 @@ def addlog(t_type, id, no):
 
 
 def takep():
-    s = selectp()
-    n = int(input("number:"))
-    dsnStr = cx_Oracle.makedsn(db_host, port, service_name=sname)
-    conn = cx_Oracle.connect(user, password, dsn=dsnStr, encoding="UTF-8")
-    cursor = conn.cursor()
-    p = getproduct(s[0])
-    t = p[7] - n
-    if t >= 0:
-        cursor.execute("UPDATE inv SET amount=:t where p_id=:id", [int(t), s[0]])
-        addlog("o", s[0], n)
-    else:
-        print("the number you get is larger than stock")
+  s=selectp()
+  n=int(input("number:"))
+  dsnStr = cx_Oracle.makedsn(db_host, port, service_name=sname)
+  conn = cx_Oracle.connect(user, password, dsn=dsnStr, encoding="UTF-8")
+  cursor=conn.cursor()
+  p=getproduct(s[0])
+  t=p[0][6]-n
+  if t>=0:
+    try:
+      cursor.execute("UPDATE inv SET amount=:t where p_id=:id",[int(t),s[0]])
+      addlog("o",s[0],n)
+      conn.commit()
+    except all as error:
+      addlog("f",s[0],-1)
+      return error
+  else:
+    print("the number you get is larger than stock")
+    addlog("f",s[0],-1)
 
+def addp():
+  s=selectp()
+  n=int(input("box number:"))
+  dsnStr = cx_Oracle.makedsn(db_host, port, service_name=sname)
+  conn = cx_Oracle.connect(user, password, dsn=dsnStr, encoding="UTF-8")
+  cursor=conn.cursor()
+  p=getproduct(s[0])
+  t=p[0][6]+n*p[0][5]
+  try:
+    cursor.execute("UPDATE inv SET amount=:t where p_id=:id",[int(t),s[0]])
+    addlog("i",s[0],n*p[0][5])
+    conn.commit()
+    return "success"
+  except all as error:
+    addlog("f",s[0],-1)
+    return error
 
 def menu():
     exit = False
